@@ -1,0 +1,157 @@
+<html>
+<head>
+    <style>
+        label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        label span {
+            width: 64px;
+            display: inline-block;
+        }
+
+        input, textarea {
+            vertical-align: top;
+            padding: 5px;
+            width: 500px;
+            border-radius: 5px;
+            border: 1px solid #000;
+            white-space: pre;
+        }
+
+        button {
+            padding: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <label>
+        <span>Input : </span>
+        <input type="text" id="input_text">
+    </label>
+    <label>
+        <span>Logs :</span>
+        <textarea id="event_logs" cols="30" rows="10" readonly></textarea>
+    </label>
+    <label for="">
+        <span></span>
+        <button type="button" id="download_logs">Download Log</button>
+        <button type="button" id="clear">Clear Log</button>
+    </label>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script>
+        KeyboardEvent.prototype.toString = function eventToString () {
+            var string = `{`;
+            
+            if (this.type) {
+                string += `"type": "${this.type}",`;
+            }
+
+            $.each(this, function (a, b, c) {
+                if (a != 'toString') {
+                    if (b != null) {
+                        if (typeof b == 'object') {
+                            if (b.constructor.name.substr(0, 4) == 'HTML') {
+                                // var div = $('<div>').append(b);
+                                // b = div.html();
+                                b = b.toString();
+                            } else {
+                                b = b.toString()
+                            }
+                        }
+        
+                        b = b.toString().replace('\n', '\\n');
+                    }
+    
+                    string += `"${a}": "${b}",`;
+                }
+            });
+
+            string = string.replace(/,$/, "");
+            string += `}`;
+
+            return string;
+        }
+
+        MouseEvent.prototype.toString = function eventToString () {
+            var string = `{`;
+            
+            if (this.type) {
+                string += `"type": "${this.type}",`;
+            }
+
+            $.each(this, function (a, b, c) {
+                if (a != 'toString') {
+                    if (b != null) {
+                        if (typeof b == 'object') {
+                            if (b.constructor.name.substr(0, 4) == 'HTML') {
+                                // var div = $('<div>').append(b);
+                                // b = div.html();
+                                b = b.toString();
+                            } else {
+                                b = b.toString()
+                            }
+                        }
+        
+                        b = b.toString().replace('\n', '\\n');
+                    }
+    
+                    string += `"${a}": "${b}",`;
+                }
+            });
+
+            string = string.replace(/,$/, "");
+            string += `}`;
+
+            return string;
+        }
+
+        var inputValue = [];
+        $(document).on('click keypress keydown keyup', function (e) {
+            // if (e.target.id != 'clear') {
+                if (e.originalEvent instanceof MouseEvent || e.originalEvent instanceof KeyboardEvent) {
+                    var oldLog = $('#event_logs').val();
+                    if (typeof oldLog == 'undefined') {
+                        oldLog = "";
+                    }
+                    
+                    var log = "";
+                        log += e.originalEvent.toString();
+                        log += "\n";
+                        log += oldLog;
+        
+                    $('#event_logs').val(log);
+
+                    if (e.originalEvent.type == 'keyup') {
+                        inputValue.push(e.originalEvent.key);
+
+                        $('#input_text').val(JSON.stringify(inputValue));
+                    }
+                }
+            // }
+        });
+
+        $('#clear').click(function () {
+            inputValue = [];
+            $('#input_text').val("");
+            $('#event_logs').val("");
+        });
+
+        var textFile = null;
+        $('#download_logs').click(function () {
+            var log = $('#event_logs').val();
+            var data = new Blob([log], {type: 'text/plain'});
+
+            var url = window.URL.createObjectURL(data);
+            var date = new Date();
+            var a = document.createElement("a");
+            a.href = url;
+            a.download = `logs-${date.getTime()}.txt`;
+            a.click();
+        });
+    </script>
+</body>
+</html>
