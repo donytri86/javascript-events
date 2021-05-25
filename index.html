@@ -17,19 +17,22 @@
             width: 500px;
             border-radius: 5px;
             border: 1px solid #000;
-            white-space: pre;
         }
 
         button {
             padding: 5px;
             cursor: pointer;
         }
+
+        #event_logs {
+            white-space: pre !important;
+        }
     </style>
 </head>
 <body>
     <label>
         <span>Input : </span>
-        <input type="text" id="input_text">
+        <textarea id="input_text" cols="30" rows="3"></textarea>
     </label>
     <label>
         <span>Logs :</span>
@@ -109,10 +112,81 @@
             return string;
         }
 
+        InputEvent.prototype.toString = function eventToString () {
+            var string = `{`;
+            
+            if (this.type) {
+                string += `"type": "${this.type}",`;
+            }
+
+            $.each(this, function (a, b, c) {
+                if (a != 'toString') {
+                    if (b != null) {
+                        if (typeof b == 'object') {
+                            if (b.constructor.name.substr(0, 4) == 'HTML') {
+                                // var div = $('<div>').append(b);
+                                // b = div.html();
+                                b = b.toString();
+                            } else {
+                                b = b.toString()
+                            }
+                        }
+        
+                        b = b.toString().replace('\n', '\\n');
+                    }
+    
+                    string += `"${a}": "${b}",`;
+                }
+            });
+
+            string = string.replace(/,$/, "");
+            string += `}`;
+
+            return string;
+        }
+
+        ClipboardEvent.prototype.toString = function eventToString () {
+            var string = `{`;
+            
+            if (this.type) {
+                string += `"type": "${this.type}",`;
+            }
+
+            $.each(this, function (a, b, c) {
+                if (a != 'toString') {
+                    if (b != null) {
+                        if (typeof b == 'object') {
+                            if (b.constructor.name.substr(0, 4) == 'HTML') {
+                                // var div = $('<div>').append(b);
+                                // b = div.html();
+                                b = b.toString();
+                            } else {
+                                b = b.toString()
+                            }
+                        }
+        
+                        b = b.toString().replace('\n', '\\n');
+                    }
+    
+                    string += `"${a}": "${b}",`;
+                }
+            });
+
+            string = string.replace(/,$/, "");
+            string += `}`;
+
+            return string;
+        }
+
         var inputValue = [];
-        $(document).on('click keypress keydown keyup', function (e) {
+        $(document).on('click keypress keydown keyup paste blur focus input propertychange', function (e) {
             // if (e.target.id != 'clear') {
-                if (e.originalEvent instanceof MouseEvent || e.originalEvent instanceof KeyboardEvent) {
+                if (
+                    e.originalEvent instanceof MouseEvent
+                    || e.originalEvent instanceof KeyboardEvent
+                    || e.originalEvent instanceof InputEvent
+                    || e.originalEvent instanceof ClipboardEvent
+                ) {
                     var oldLog = $('#event_logs').val();
                     if (typeof oldLog == 'undefined') {
                         oldLog = "";
@@ -129,6 +203,8 @@
                         inputValue.push(e.originalEvent.key);
 
                         $('#input_text').val(JSON.stringify(inputValue));
+                    } else if (e.originalEvent.type == 'paste') {
+                        inputValue.push(e.originalEvent.clipboardData.getData('text'));
                     }
                 }
             // }
